@@ -64,6 +64,20 @@ def search_index(
     return results
 
 
+def build_query_prompt(
+    user_query: str,
+    index: faiss.Index,
+    chunks: List[str],
+    model: SentenceTransformer,
+    top_k: int = 3,
+) -> str:
+    """Return retrieved context and user query as a single prompt."""
+
+    results = search_index(user_query, index, chunks, model, top_k)
+    context = "\n".join(text for text, _ in results)
+    return f"{context}\n\n{user_query}"
+
+
 if __name__ == "__main__":
     import argparse
 
