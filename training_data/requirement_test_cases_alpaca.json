@@ -1,0 +1,202 @@
+[
+  {
+    "instruction": "SCR01 - Revised risk weights for rated corporate exposure - Validate revised Basel 3.1 risk weights for a rated corporate exposure using BigQuery and Looker Studio",
+    "input": "",
+    "output": "Step 1: Log in to GCP and open the BigQuery console\nTest Data: GCP access credentials with BigQuery role\nExpected Result: User successfully logs into GCP and accesses BigQuery console\nStep 2: Run query to extract exposure record E_CORP_001 from `basel31.exposures_dataset`\nTest Data: SELECT * FROM basel31.exposures_dataset WHERE exposure_id = 'E_CORP_001'\nExpected Result: Exposure details retrieved with asset_class='Corporate', rating='A', EAD=1,000,000\nStep 3: Query `reference_data_dataset.risk_weights` to get Basel 3.1 risk weight for rating 'A'\nTest Data: SELECT risk_weight FROM reference_data_dataset.risk_weights WHERE asset_class = 'Corporate' AND rating = 'A'\nExpected Result: Returned risk weight = 20%\nStep 4: Verify that derived RWA = EAD — RW is calculated correctly in the dataset\nTest Data: Derived RWA field in transformed BigQuery view or output table\nExpected Result: RWA field value = 1,000,000 — 20% = 200,000\nStep 5: Open Looker Studio dashboard and locate record E_CORP_001 in the Credit Risk section\nTest Data: Looker Studio > Basel 3.1 Credit Risk Dashboard > Filter: Exposure ID = 'E_CORP_001'\nExpected Result: Dashboard displays RWA as 200,000 for E_CORP_001\nStep 6: Check lineage log table to confirm rule version `2025.04` applied for RWA derivation\nTest Data: SELECT rule_version FROM basel31.lineage_log WHERE exposure_id = 'E_CORP_001'\nExpected Result: Rule version = '2025.04' is confirmed in lineage log"
+  },
+  {
+    "instruction": "SCR02 - Use of external ratings for risk weight mapping - Confirm lineage and rule version used in mapping process for rated exposure",
+    "input": "",
+    "output": "Step 1: Query lineage log for Exposure ID = 'E_RATED_001'\nTest Data: SELECT rule_version FROM basel31.lineage_log WHERE exposure_id = 'E_RATED_001'\nExpected Result: Rule version = '2025.04' is confirmed and matches reference mapping logic"
+  },
+  {
+    "instruction": "SCR02 - Use of external ratings for risk weight mapping - Ensure that all active exposures with valid external ratings are assigned correct risk weights in the transformed dataset",
+    "input": "",
+    "output": "Step 1: Run BigQuery SQL to join exposure table with applicable rating and risk weight reference table\nTest Data: SELECT exposure_id, rating, risk_weight FROM exposures_dataset JOIN reference_data_dataset.s_and_p_ratings USING (rating)\nExpected Result: Risk weights for all rated exposures match reference mappings for their respective rating"
+  },
+  {
+    "instruction": "SCR02 - Use of external ratings for risk weight mapping - Validate mapping of Fitch rating 'BBB' to risk weight for corporate exposures",
+    "input": "",
+    "output": "Step 1: Query risk weight mapping for Fitch rating 'BBB' in fitch_ratings table\nTest Data: SELECT risk_weight FROM reference_data_dataset.fitch_ratings WHERE rating = 'BBB'\nExpected Result: Returned risk weight = 50%"
+  },
+  {
+    "instruction": "SCR02 - Use of external ratings for risk weight mapping - Validate mapping of Moodyâ€™s rating 'Baa2' to risk weight for corporate exposures",
+    "input": "",
+    "output": "Step 1: Query risk weight mapping for Moodyâ€™s rating 'Baa2' in moodys_ratings table\nTest Data: SELECT risk_weight FROM reference_data_dataset.moodys_ratings WHERE rating = 'Baa2'\nExpected Result: Returned risk weight = 50%"
+  },
+  {
+    "instruction": "SCR02 - Use of external ratings for risk weight mapping - Validate mapping of S&P rating 'A' to risk weight for corporate exposures",
+    "input": "",
+    "output": "Step 1: Query risk weight mapping for S&P rating 'A' in s_and_p_ratings table\nTest Data: SELECT risk_weight FROM reference_data_dataset.s_and_p_ratings WHERE rating = 'A'\nExpected Result: Returned risk weight = 20%"
+  },
+  {
+    "instruction": "SCR02 - Use of external ratings for risk weight mapping - Validate mapping of external credit ratings to risk weights for corporate exposures under Basel 3.1",
+    "input": "",
+    "output": "Step 1: Access BigQuery and confirm availability of rating-agency-specific reference data tables\nTest Data: GCP > BigQuery > reference_data_dataset > tables: s_and_p_ratings, moodys_ratings, fitch_ratings\nExpected Result: All reference tables exist and contain valid rating-risk weight mappings per BCBS 424"
+  },
+  {
+    "instruction": "SCR02 - Use of external ratings for risk weight mapping - Validate that Looker dashboard displays correct risk weight for rated exposure 'E_RATED_001'",
+    "input": "",
+    "output": "Step 1: Filter Looker Studio Basel 3.1 Credit Risk dashboard for Exposure ID = 'E_RATED_001'\nTest Data: Exposure ID: E_RATED_001 with rating 'A'\nExpected Result: Looker dashboard shows risk weight = 20% under risk parameters"
+  },
+  {
+    "instruction": "SCR03 - Treatment of unrated corporate exposures under Basel 3.1 - Confirm rule traceability and version used for risk weight derivation of `E_UNRATED_001`",
+    "input": "",
+    "output": "Step 1: Query lineage log for Exposure ID = 'E_UNRATED_001'\nTest Data: SELECT rule_version, logic_applied FROM basel31.lineage_log WHERE exposure_id = 'E_UNRATED_001'\nExpected Result: Rule version = '2025.04', logic_applied = 'Unrated corporate â€“ default 100%'"
+  },
+  {
+    "instruction": "SCR03 - Treatment of unrated corporate exposures under Basel 3.1 - Ensure that special criteria for reduced risk weights are not applied to non-qualifying unrated corporates",
+    "input": "",
+    "output": "Step 1: Check if reduced risk weights are applied to any unrated exposure without satisfying alternative eligibility conditions\nTest Data: SELECT * FROM transformed_exposures WHERE asset_class = 'Corporate' AND rating IS NULL AND risk_weight < 100\nExpected Result: Query returns zero rows, confirming no inappropriate reduction in risk weights"
+  },
+  {
+    "instruction": "SCR03 - Treatment of unrated corporate exposures under Basel 3.1 - Validate that the Looker Studio dashboard reflects the 100% risk weight for unrated corporate exposure `E_UNRATED_001`",
+    "input": "",
+    "output": "Step 1: Access Looker Studio > Basel 3.1 Credit Risk dashboard and filter for Exposure ID = 'E_UNRATED_001'\nTest Data: Exposure ID: E_UNRATED_001 with NULL rating and Corporate asset class\nExpected Result: Dashboard displays risk weight = 100% for the selected exposure"
+  },
+  {
+    "instruction": "SCR03 - Treatment of unrated corporate exposures under Basel 3.1 - Validate that unrated corporate exposures are assigned 100% risk weight as default treatment",
+    "input": "",
+    "output": "Step 1: Run a BigQuery SQL query to extract corporate exposures with no external credit rating\nTest Data: SELECT * FROM exposures_dataset WHERE asset_class = 'Corporate' AND rating IS NULL\nExpected Result: List of exposures retrieved with asset_class = 'Corporate' and NULL rating field"
+  },
+  {
+    "instruction": "SCR03 - Treatment of unrated corporate exposures under Basel 3.1 - Verify that the default risk weight of 100% is applied to all unrated corporates",
+    "input": "",
+    "output": "Step 1: Query transformed dataset or output view to validate assigned risk weight for unrated corporate exposures\nTest Data: SELECT exposure_id, risk_weight FROM transformed_exposures WHERE asset_class = 'Corporate' AND rating IS NULL\nExpected Result: Risk weight column shows value = 100% for all such exposures"
+  },
+  {
+    "instruction": "SCR04 – Real Estate Exposure Differentiation - Confirm dashboard segmentation",
+    "input": "",
+    "output": "Step 1: Filter dashboard by exposure category\nTest Data: Looker Studio > Real Estate Risk Dashboard\nExpected Result: Two categories visible with separate risk weight logic"
+  },
+  {
+    "instruction": "SCR04 – Real Estate Exposure Differentiation - Validate income-producing vs non-income real estate classification",
+    "input": "",
+    "output": "Step 1: Query exposure dataset for real estate asset class\nTest Data: SELECT * FROM exposures_dataset WHERE asset_class = 'RealEstate'\nExpected Result: Dataset includes fields to distinguish income-producing and non-income properties"
+  },
+  {
+    "instruction": "SCR04 – Real Estate Exposure Differentiation - Verify risk weight assigned based on property income type",
+    "input": "",
+    "output": "Step 1: Query risk weights for both types\nTest Data: SELECT exposure_id, property_type, risk_weight FROM transformed_exposures\nExpected Result: Income-producing assigned 70%, non-income producing assigned 100%"
+  },
+  {
+    "instruction": "SCR05 – LTV-Based Risk Weighting for Real Estate - Confirm dashboard visualization",
+    "input": "",
+    "output": "Step 1: Apply filter on LTV range\nTest Data: Looker Studio > Real Estate Risk View\nExpected Result: Risk weights shown aligned with band ranges"
+  },
+  {
+    "instruction": "SCR05 – LTV-Based Risk Weighting for Real Estate - Confirm rule version in lineage",
+    "input": "",
+    "output": "Step 1: Query lineage log\nTest Data: SELECT rule_version FROM lineage_log WHERE exposure_id = 'E_LTV_001'\nExpected Result: Rule version = ‘2025.04’ is confirmed"
+  },
+  {
+    "instruction": "SCR05 – LTV-Based Risk Weighting for Real Estate - Validate availability of LTV band reference table",
+    "input": "",
+    "output": "Step 1: Check LTV thresholds in reference data\nTest Data: SELECT * FROM reference_data_dataset.ltv_bands\nExpected Result: LTV bands exist: ≤60%, 60–80%, >80%"
+  },
+  {
+    "instruction": "SCR05 – LTV-Based Risk Weighting for Real Estate - Verify correct band assignment and risk weight",
+    "input": "",
+    "output": "Step 1: Join exposures with LTV bands\nTest Data: SELECT exposure_id, ltv, risk_weight FROM exposures_dataset JOIN ltv_bands USING (ltv)\nExpected Result: RW = 50% for ≤60%, 70% for 60–80%, 100% for >80%"
+  },
+  {
+    "instruction": "SCR06 – Retail Exposure Segmentation - Confirm visualization by segment",
+    "input": "",
+    "output": "Step 1: Looker dashboard segmentation\nTest Data: Looker Studio > Retail Segmentation Report\nExpected Result: Exposure count and risk weights by segment shown"
+  },
+  {
+    "instruction": "SCR06 – Retail Exposure Segmentation - Ensure exposure data includes segment type",
+    "input": "",
+    "output": "Step 1: Query transformed dataset\nTest Data: SELECT exposure_id, retail_type, risk_weight FROM transformed_exposures WHERE asset_class = 'Retail'\nExpected Result: Exposures correctly categorized by segment"
+  },
+  {
+    "instruction": "SCR06 – Retail Exposure Segmentation - Validate retail customer type segmentation logic",
+    "input": "",
+    "output": "Step 1: Check segmentation logic in rulebook\nTest Data: SELECT * FROM rulebook WHERE rule_type = 'Retail_Segmentation'\nExpected Result: Logic present for transactors, revolvers, others"
+  },
+  {
+    "instruction": "SCR06 – Retail Exposure Segmentation - Verify segment-based risk weights",
+    "input": "",
+    "output": "Step 1: Validate risk weight by type\nTest Data: RW = 45% (transactors), 75% (revolvers), 100% (others)"
+  },
+  {
+    "instruction": "SCR07 – Off-Balance-Sheet Exposure Conversion - Ensure new logic excludes legacy mappings",
+    "input": "",
+    "output": "Step 1: Check lineage logs for updated logic\nTest Data: SELECT rule_version FROM lineage_log WHERE exposure_type = 'OffBS'\nExpected Result: Rule version = ‘2025.04’, logic = Basel 3.1 CCF rules"
+  },
+  {
+    "instruction": "SCR07 – Off-Balance-Sheet Exposure Conversion - Validate CCF mapping table",
+    "input": "",
+    "output": "Step 1: Query reference data for CCF\nTest Data: SELECT * FROM reference_data_dataset.ccf_mapping\nExpected Result: CCFs present for all exposure types (e.g., 10% for UCCs)"
+  },
+  {
+    "instruction": "SCR07 – Off-Balance-Sheet Exposure Conversion - Validate dashboard impact for key off-balance exposures",
+    "input": "",
+    "output": "Step 1: View in Looker\nTest Data: Looker Studio > OffBS Credit Risk\nExpected Result: EAD and RW match calculated CCF-adjusted values"
+  },
+  {
+    "instruction": "SCR07 – Off-Balance-Sheet Exposure Conversion - Verify application of new CCFs",
+    "input": "",
+    "output": "Step 1: Check EAD after CCF applied\nTest Data: SELECT exposure_id, orig_amount, ccf, ead FROM transformed_exposures WHERE exposure_type = 'OffBS'\nExpected Result: EAD = Original Amount × CCF"
+  },
+  {
+    "instruction": "SCR08 - Standardized Credit Risk - Exposure class mapping - Confirm exposure class logic in rulebook and lineage",
+    "input": "",
+    "output": "Step 1: Query lineage log for exposure with ID = 'E_CLASS_001'\nTest Data: SELECT rule_version, logic_applied FROM lineage_log WHERE exposure_id = 'E_CLASS_001'\nExpected Result: Rule version = '2025.04', logic_applied = 'Exposure class rule applied as per Basel 3.1'"
+  },
+  {
+    "instruction": "SCR08 - Standardized Credit Risk - Exposure class mapping - Validate rule-based mapping of exposure class based on counterparty type",
+    "input": "",
+    "output": "Step 1: Query exposure dataset and verify assigned exposure class\nTest Data: SELECT exposure_id, counterparty_type, purpose, security_type, exposure_class FROM transformed_exposures\nExpected Result: Exposure class assigned based on counterparty type, purpose, and collateral per Basel 3.1 rules"
+  },
+  {
+    "instruction": "SCR09 - Standardized Credit Risk - Currency and maturity mismatches - Validate maturity mismatch adjustments",
+    "input": "",
+    "output": "Step 1: Query exposures with residual maturity < collateral maturity\nTest Data: SELECT exposure_id, residual_maturity, collateral_maturity, rwa FROM transformed_exposures\nExpected Result: RWAs reflect conservative adjustments for mismatches"
+  },
+  {
+    "instruction": "SCR09 - Standardized Credit Risk - Currency and maturity mismatches - Verify risk weight adjustment for currency mismatch",
+    "input": "",
+    "output": "Step 1: Query exposures where currency â‰  collateral_currency\nTest Data: SELECT * FROM exposures_dataset WHERE currency <> collateral_currency\nExpected Result: RWA adjusted upward where mismatches exist"
+  },
+  {
+    "instruction": "SCR10 - Standardized Credit Risk - Sovereign exposure treatment - Validate preferential treatment for investment grade sovereigns",
+    "input": "",
+    "output": "Step 1: Query sovereign exposures and match with external rating\nTest Data: SELECT * FROM exposures_dataset JOIN sovereign_ratings USING (country)\nExpected Result: Risk weight = 0% or 20% based on external rating and national discretion"
+  },
+  {
+    "instruction": "SCR10 - Standardized Credit Risk - Sovereign exposure treatment - Verify lineage for sovereign preferential rule application",
+    "input": "",
+    "output": "Step 1: Query lineage log for sovereign exposure ID = 'E_SOVEREIGN_001'\nTest Data: SELECT rule_version, logic_applied FROM lineage_log WHERE exposure_id = 'E_SOVEREIGN_001'\nExpected Result: Lineage confirms application of sovereign preference rule"
+  },
+  {
+    "instruction": "SCR11 - Standardized Credit Risk - SME supporting factor - Check eligibility of SME exposures",
+    "input": "",
+    "output": "Step 1: Query SME-flagged exposures with turnover and size filters\nTest Data: SELECT exposure_id, turnover, num_employees, sme_flag FROM exposures_dataset\nExpected Result: Only qualifying SMEs flagged for support factor"
+  },
+  {
+    "instruction": "SCR11 - Standardized Credit Risk - SME supporting factor - Verify reduced risk weight applied",
+    "input": "",
+    "output": "Step 1: Query risk weights for flagged SME exposures\nTest Data: SELECT exposure_id, sme_flag, risk_weight FROM transformed_exposures\nExpected Result: Risk weight shows 75% or adjusted per transitional rule"
+  },
+  {
+    "instruction": "SCR12 - Standardized Credit Risk - Data lineage and rule versioning - Confirm traceability of all calculated RWA fields",
+    "input": "",
+    "output": "Step 1: Check lineage log completeness for all exposure IDs\nTest Data: SELECT DISTINCT exposure_id FROM lineage_log\nExpected Result: Lineage log includes all transformed exposures"
+  },
+  {
+    "instruction": "SCR12 - Standardized Credit Risk - Data lineage and rule versioning - Verify each rule version used in risk calculations",
+    "input": "",
+    "output": "Step 1: Extract unique rule versions applied\nTest Data: SELECT DISTINCT rule_version FROM lineage_log\nExpected Result: Rule versions include latest â€˜2025.04â€™ with no gaps"
+  },
+  {
+    "instruction": "SCR13 - Standardized Credit Risk - Parallel run logic - Validate existence of dual RWA fields (Basel III and Basel 3.1)",
+    "input": "",
+    "output": "Step 1: Query transformed dataset for RWA_Basel3 and RWA_Basel31 columns\nTest Data: SELECT exposure_id, RWA_Basel3, RWA_Basel31 FROM transformed_exposures\nExpected Result: Both fields are populated and differ per respective logic"
+  },
+  {
+    "instruction": "SCR13 - Standardized Credit Risk - Parallel run logic - Verify dashboard allows Basel 3 and 3.1 comparison",
+    "input": "",
+    "output": "Step 1: Check Looker Studio filter and chart toggle options\nTest Data: Looker Studio > Basel Comparison Dashboard\nExpected Result: User can toggle between Basel 3 and Basel 3.1 RWAs"
+  }
+]
