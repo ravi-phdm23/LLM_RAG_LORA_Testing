@@ -1,0 +1,10 @@
+# Project dependencies
+peft
+transformers
+torch
+pdfplumber
+nltk
+sentence-transformers
+faiss-cpu
+datasets
+huggingface_hub
