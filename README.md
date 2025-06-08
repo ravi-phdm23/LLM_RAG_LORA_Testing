@@ -1,25 +1,45 @@
 # LLM_RAG_LORA_Testing
 
-This repository contains utilities for experimenting with LoRA fine tuning and retrieval augmented generation (RAG) using the Basel regulations PDF.
+This project explores fine‑tuning a small language model with LoRA adapters and enhancing generation with retrieval augmented generation (RAG).  The Basel III summary PDF serves as the knowledge source.
 
-## Demo CLI
+## Model
 
-`demo_cli.py` loads the fine‑tuned model and optionally retrieves context from `Basel_summary.pdf` via a FAISS index.
+Scripts such as `lora_training_script.py` fine‑tune **TinyLlama/TinyLlama-1.1B-Chat-v1.0** using Alpaca‑formatted JSON data from `training_data/`.
 
-Build the index once using `pdf_faiss_index.py`:
+## Fine‑tuning with LoRA
 
+1. Prepare your dataset inside `training_data/`.
+2. Run the training script to produce adapters:
+   ```bash
+   python lora_training_script.py
+   ```
+   The script loads the base model, applies LoRA modules and saves the result under `lora_adapters/`.
+
+## Retrieval Augmented Generation
+
+`pdf_faiss_index.py` builds a FAISS index over the provided Basel summary. Retrieved text is appended to the instruction before generation to improve factuality.
+
+Build the index once:
 ```bash
 python pdf_faiss_index.py --build
 ```
 
-Run the CLI with or without retrieval:
+## Running the Demo
+
+Use `demo_cli.py` to interact with the fine‑tuned model. Pass `--use-rag` to include retrieved context.
 
 ```bash
 # With RAG
 python demo_cli.py "What are the Basel III capital requirements?" --use-rag
 
 # Without RAG
-python demo_cli.py "Summarise Basel III capital requirements"
+python demo_cli.py "What are the Basel III capital requirements?"
 ```
 
-Options are available to specify the LoRA adapter path, base model ID and index files.
+Typical output with RAG looks like:
+
+```
+Basel III requires banks to maintain at least 4.5% Common Equity Tier 1 capital. Including the conservation buffer, this rises to around 7% with additional countercyclical buffers when required.
+```
+
+Adapter path, base model ID and index files can be customised via command line options.
