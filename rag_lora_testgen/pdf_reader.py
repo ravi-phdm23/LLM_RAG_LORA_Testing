@@ -10,7 +10,6 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 def load_pdf_chunks(pdf_path: str, chunk_size: int = 500) -> list[str]:
     """Read ``pdf_path`` and split text into roughly ``chunk_size`` token chunks."""
     nltk.download("punkt", quiet=True)
-    nltk.download("punkt_tab", quiet=True)
 
     text_parts: list[str] = []
     with pdfplumber.open(pdf_path) as pdf:
