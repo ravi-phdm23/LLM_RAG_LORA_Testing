@@ -6,7 +6,6 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 def load_basel_summary_chunks(pdf_path: str = "RWA_docs/Basel_summary.pdf", chunk_size: int = 500) -> list[str]:
     """Read Basel_summary.pdf and split text into ~``chunk_size`` token chunks."""
     nltk.download("punkt", quiet=True)
-    nltk.download("punkt_tab", quiet=True)
 
     text_parts = []
     with pdfplumber.open(pdf_path) as pdf:
