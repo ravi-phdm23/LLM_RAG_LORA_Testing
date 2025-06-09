@@ -43,3 +43,13 @@ Basel III requires banks to maintain at least 4.5% Common Equity Tier 1 capital.
 ```
 
 Adapter path, base model ID and index files can be customised via command line options.
+
+## End-to-End Pipeline
+
+Run all steps (training, indexing and inference) in one go with `run_pipeline.sh`:
+
+```bash
+./run_pipeline.sh "What are the Basel III capital requirements?"
+```
+
+The script first trains LoRA adapters, builds the FAISS index and finally runs `demo_cli.py` with RAG enabled.
